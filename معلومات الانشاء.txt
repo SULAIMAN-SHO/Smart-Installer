@@ -1,0 +1,21 @@
+WebBuilder.exe
+
+File description
+
+Automated Web Development Setup Tool
+
+
+Copyright
+
+© 2026 SULAIMAN SHO. All Rights Reserved
+
+
+Product name
+
+SULAIMAN SHO | WebDev Builder Pro
+
+
+
+استدعاء برنامج التحويل
+
+Win-PS2EXE
