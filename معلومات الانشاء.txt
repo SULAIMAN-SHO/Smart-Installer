@@ -1,4 +1,4 @@
-WebBuilder.exe
+Smart_Installer.exe
 
 File description
 
@@ -12,7 +12,7 @@ Copyright
 
 Product name
 
-SULAIMAN SHO | WebDev Builder Pro
+SULAIMAN SHO | Smart_Installer Pro
 
 
 
