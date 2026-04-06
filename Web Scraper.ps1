@@ -66,8 +66,6 @@ function New-SchoWindow {
 }
 function Show-SchoMessage {
     param([string]$Message, [string]$Type = "Success")
-    
-    # تصغير حجم النافذة لتكون متناسقة وأنيقة
     $msgWidth = 380; $msgHeight = 160
     $msgForm = New-Object System.Windows.Forms.Form
     $msgForm.Size = New-Object System.Drawing.Size($msgWidth, $msgHeight)
@@ -76,23 +74,17 @@ function Show-SchoMessage {
     $msgForm.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#1E1E1E")
     $msgForm.Opacity = 0
     $msgForm.RightToLeft = if ($script:isEnglish) { "No" } else { "Yes" }
-
     $hexColor = if ($Type -eq "Error") { "#A64444" } else { "#007ACC" }
     $bColor = [System.Drawing.ColorTranslator]::FromHtml($hexColor)
-
     $OnMoveMsg = { [Win32.WindowMover]::ReleaseCapture() | Out-Null
         [Win32.WindowMover]::SendMessage($this.FindForm().Handle, 0xA1, 0x2, 0) | Out-Null
     }
     $msgForm.Add_MouseDown($OnMoveMsg)
-
-    # الشريط العلوي (Header)
     $msgHeader = New-Object System.Windows.Forms.Panel
     $msgHeader.SetBounds(0, 0, $msgWidth, 35)
     $msgHeader.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D2D")
     $msgHeader.Add_MouseDown($OnMoveMsg)
     $msgForm.Controls.Add($msgHeader)
-
-    # إضافة اسم الأداة في الشريط العلوي لزيادة الاحترافية
     $lblTitle = New-Object System.Windows.Forms.Label
     $lblTitle.Text = if ($script:isEnglish) { "SULAIMAN SHO | System Message" } else { "رسالة نظام | SULAIMAN SHO " }
     $lblTitle.ForeColor = [System.Drawing.Color]::White
@@ -101,22 +93,18 @@ function Show-SchoMessage {
     $lblTitle.Dock = "Fill"
     $lblTitle.Add_MouseDown($OnMoveMsg)
     $msgHeader.Controls.Add($lblTitle)
-
-    # النص في المنتصف (مضبوط بدقة رياضية)
     $lblMsg = New-Object System.Windows.Forms.Label
     $lblMsg.Text = $Message
     $lblMsg.ForeColor = [System.Drawing.Color]::White
     $lblMsg.Font = New-Object System.Drawing.Font("Segoe UI", 10)
     $lblMsg.TextAlign = "MiddleCenter"
-    $lblMsg.SetBounds(10, 35, ($msgWidth - 20), 75) 
+    $lblMsg.SetBounds(10, 35, ($msgWidth - 20), 75)
     $lblMsg.Add_MouseDown($OnMoveMsg)
     $msgForm.Controls.Add($lblMsg)
-
-    # زر موافق (موسّط في أسفل النافذة)
     $btnOk = New-Object System.Windows.Forms.Button
     $btnOk.Text = if ($script:isEnglish) { "OK" } else { "موافق" }
     $btnOk.Size = New-Object System.Drawing.Size(100, 30)
-    $btnOk.Location = New-Object System.Drawing.Point(140, 115) 
+    $btnOk.Location = New-Object System.Drawing.Point(140, 115)
     $btnOk.FlatStyle = "Flat"
     $btnOk.FlatAppearance.BorderSize = 0
     $btnOk.ForeColor = [System.Drawing.Color]::White
@@ -124,13 +112,10 @@ function Show-SchoMessage {
     $btnOk.Cursor = "Hand"
     $btnOk.Add_Click({ $msgForm.Close() })
     $msgForm.Controls.Add($btnOk)
-
-    # الحدود الملونة للنافذة
     $pTop = New-Object System.Windows.Forms.Panel; $pTop.SetBounds(0, 0, $msgWidth, 1); $pTop.BackColor = $bColor; $msgForm.Controls.Add($pTop); $pTop.BringToFront()
     $pBot = New-Object System.Windows.Forms.Panel; $pBot.SetBounds(0, $msgHeight - 1, $msgWidth, 1); $pBot.BackColor = $bColor; $msgForm.Controls.Add($pBot); $pBot.BringToFront()
     $pLft = New-Object System.Windows.Forms.Panel; $pLft.SetBounds(0, 0, 1, $msgHeight); $pLft.BackColor = $bColor; $msgForm.Controls.Add($pLft); $pLft.BringToFront()
     $pRgt = New-Object System.Windows.Forms.Panel; $pRgt.SetBounds($msgWidth - 1, 0, 1, $msgHeight); $pRgt.BackColor = $bColor; $msgForm.Controls.Add($pRgt); $pRgt.BringToFront()
-
     $fadeTimer = New-Object System.Windows.Forms.Timer
     $fadeTimer.Interval = 10
     $fadeTimer.Add_Tick({
@@ -247,7 +232,7 @@ function Show-NodeJsDialog {
 }
 function Show-ConfirmDialog {
     param([string]$Message)
-    $ui = New-SchoWindow -Title "SULAIMAN SHO | Add_ons Manager" -Width 420 -Height 210
+    $ui = New-SchoWindow -Title "SULAIMAN SHO | Smart Installer" -Width 420 -Height 210
     $confirmDlg = $ui[0]
     $lblMsg = New-Object System.Windows.Forms.Label
     $lblMsg.Text = $Message; $lblMsg.ForeColor = [System.Drawing.Color]::White
@@ -267,53 +252,36 @@ function Show-ConfirmDialog {
     $confirmDlg.Controls.Add($btnCancel)
     return $confirmDlg.ShowDialog()
 }
-# وظيفة جديدة لتحديث نص الزر حسب حالة الويندوز
 function Update-DevViewUI {
     $regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
     $status = Get-ItemProperty -Path $regPath -Name "HideFileExt"
-    
     if ($status.HideFileExt -eq 0) {
-        # الحالة الحالية: وضع المطور مفعّل (الملفات ظاهرة)
         $btnDevView.Text = if ($script:isEnglish) { "$([char]0x1F441) User View" } else { "$([char]0x1F441) وضع المستخدم" }
-        # تحديث التلميح ليناسب حالة العودة للوضع العادي
         $tip = if ($script:isEnglish) { "Restore normal view (Hide hidden files)" } else { "العودة للوضع العادي (إخفاء الملفات والامتدادات)" }
     }
     else {
-        # الحالة الحالية: وضع المستخدم مفعّل (الملفات مخفية)
         $btnDevView.Text = if ($script:isEnglish) { "$([char]0x1F441) Dev View" } else { "$([char]0x1F441) رؤية المطور" }
-        # تحديث التلميح ليناسب حالة تفعيل وضع المطور
         $tip = if ($script:isEnglish) { "Enable developer view (Show hidden files)" } else { "تفعيل رؤية المطور (إظهار الملفات المخفية والامتدادات)" }
     }
-    
-    # تطبيق التلميح الجديد على الزر
     $toolTip.SetToolTip($btnDevView, $tip)
 }
-
-# تحديث وظيفة التفعيل لتصبح وظيفة "تبديل" (Toggle)
 function Set-DevView {
     $regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
     $status = Get-ItemProperty -Path $regPath -Name "HideFileExt"
-
     if ($status.HideFileExt -eq 1) {
-        # تفعيل وضع المطور (إظهار كل شيء)
         Set-ItemProperty -Path $regPath -Name "HideFileExt" -Value 0
         Set-ItemProperty -Path $regPath -Name "Hidden" -Value 1
         $msg = if ($script:isEnglish) { "Developer View Enabled!" } else { "تم تفعيل رؤية المطور" }
     }
     else {
-        # تفعيل وضع المستخدم (إخفاء الملفات الحساسة)
         Set-ItemProperty -Path $regPath -Name "HideFileExt" -Value 1
         Set-ItemProperty -Path $regPath -Name "Hidden" -Value 2
         $msg = if ($script:isEnglish) { "User View Enabled!" } else { "تم تفعيل وضع المستخدم العادي" }
     }
-
-    # تحديث نظام ويندوز لكي تظهر التغييرات فوراً بدون إعادة تشغيل
     $refreshCode = '[DllImport("shell32.dll")] public static extern void SHChangeNotify(int wEventId, int uFlags, IntPtr dwItem1, IntPtr dwItem2);'
     $type = Add-Type -MemberDefinition $refreshCode -Name "Shell32Refresh$([guid]::NewGuid().ToString('N'))" -PassThru
     $type::SHChangeNotify(0x08000000, 0x0000, [IntPtr]::Zero, [IntPtr]::Zero)
-    # إجبار جميع نوافذ المجلدات المفتوحة حالياً على التحديث فوراً
     (New-Object -ComObject Shell.Application).Windows() | ForEach-Object { $_.Refresh() }
-    # تحديث نص الزر فوراً ليعكس الحالة الجديدة
     Update-DevViewUI
     Show-SchoMessage -Message $msg -Type "Success"
 }
@@ -424,9 +392,19 @@ $btnInstallVS.Add_Click({
     })
 
 
+$pnlActionButtons = New-Object System.Windows.Forms.FlowLayoutPanel
+$pnlActionButtons.SetBounds(45, 125, 1210, 45)
+$pnlActionButtons.BackColor = [System.Drawing.Color]::Transparent
+$pnlActionButtons.FlowDirection = "RightToLeft"
+$pnlActionButtons.WrapContents = $false
+$pnlActionButtons.Padding = New-Object System.Windows.Forms.Padding(0, 0, 0, 0)
+$pnlActionButtons.Margin = New-Object System.Windows.Forms.Padding(0, 0, 0, 0)
+$pnlActionButtons.Anchor = [System.Windows.Forms.AnchorStyles]::None
+$mainForm.Controls.Add($pnlActionButtons)
+
+
 $btnDevView = New-Object System.Windows.Forms.Label
-# تم حذف السطر القديم لكي لا يكون النص ثابتاً
-$btnDevView.SetBounds(230, 125, 160, 35)
+$btnDevView.Size = New-Object System.Drawing.Size(160, 35)
 $btnDevView.ForeColor = "White"; $btnDevView.Cursor = "Hand"; $btnDevView.TextAlign = "MiddleCenter"
 $btnDevView.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30")
 $btnDevView.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 10, [System.Drawing.FontStyle]::Bold)
@@ -434,12 +412,7 @@ $toolTip.SetToolTip($btnDevView, "تفعيل رؤية المطور | Enable DevV
 $btnDevView.Add_MouseEnter({ $this.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#3F3F41") })
 $btnDevView.Add_MouseLeave({ $this.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30") })
 $btnDevView.Add_Click({ Set-DevView })
-
-$mainForm.Controls.Add($btnDevView)
 $btnDevView.BringToFront()
-
-
-
 $picIcon = New-Object System.Windows.Forms.PictureBox
 $picIcon.SetBounds(10, 7, 20, 20); $picIcon.SizeMode = "Zoom"
 $pnlMainHeader.Controls.Add($picIcon); $picIcon.BringToFront()
@@ -642,27 +615,23 @@ function Update-Display {
         }
     }
 }
-# محرك الأنيميشن: يقوم بعمل حركة انزلاق ناعمة للقائمة عند التبديل
 function Animate-TabTransition {
     param([int]$TargetY, [int]$TargetHeight)
-    
     $flowLayoutPanel.Visible = $false
-    # نبدأ برسم القائمة في مكان أسفل من مكانها الطبيعي بـ 30 بكسل
     $flowLayoutPanel.Location = New-Object System.Drawing.Point(20, ($TargetY + 30))
     $flowLayoutPanel.Size = New-Object System.Drawing.Size(1260, $TargetHeight)
     $flowLayoutPanel.Visible = $true
-
-    # تشغيل مؤقت زمني سريع جداً لرفع القائمة للأعلى
     $global:animTimer = New-Object System.Windows.Forms.Timer
-    $global:animTimer.Interval = 10 # سرعة الحركة
+    $global:animTimer.Interval = 10
     $global:animTimer.Add_Tick({
-        if ($flowLayoutPanel.Top -gt $TargetY) {
-            $flowLayoutPanel.Top -= 5 # رفع القائمة 5 بكسل في كل نبضة
-        } else {
-            $flowLayoutPanel.Top = $TargetY # التوقف عند الوصول للمكان المطلوب
-            $global:animTimer.Stop()
-        }
-    })
+            if ($flowLayoutPanel.Top -gt $TargetY) {
+                $flowLayoutPanel.Top -= 5
+            }
+            else {
+                $flowLayoutPanel.Top = $TargetY
+                $global:animTimer.Stop()
+            }
+        })
     $global:animTimer.Start()
 }
 $pnlTabs = New-Object System.Windows.Forms.Panel
@@ -686,7 +655,8 @@ $btnTabVS.Add_Click({
         $btnInstallVS.Visible = $true
         $btnInstallNode.Visible = $true
         $btnDevView.Visible = $true
-        # تصغير مساحة عرض الإضافات لترك فراغ لأزرار التحكم في قسم VS Code
+        $btnInstallGit.Visible = $true
+        $btnUpdateExts.Visible = $true
         $flowLayoutPanel.Location = New-Object System.Drawing.Point(20, 170)
         $flowLayoutPanel.Size = New-Object System.Drawing.Size(1260, 295)
         $lblBodyTitle.Text = if ($script:isEnglish) { "VS Code Pro Extension Manager" } else { "مدير إضافات VS Code الاحترافي" }
@@ -708,7 +678,8 @@ $btnTabChrome.Add_Click({
         $btnInstallVS.Visible = $false
         $btnInstallNode.Visible = $false
         $btnDevView.Visible = $false
-        # تكبير مساحة عرض الإضافات واستغلال الفراغ العلوي في قسم الكروم
+        $btnInstallGit.Visible = $false
+        $btnUpdateExts.Visible = $false
         $flowLayoutPanel.Location = New-Object System.Drawing.Point(20, 125)
         $flowLayoutPanel.Size = New-Object System.Drawing.Size(1260, 340)
         $lblBodyTitle.Text = if ($script:isEnglish) { "Chrome Pro Extension Manager" } else { "مدير إضافات Chrome الاحترافي" }
@@ -777,8 +748,19 @@ $btnInstallSelected = New-Object System.Windows.Forms.Button
 $btnInstallSelected = New-Object System.Windows.Forms.Button
 $btnInstallSelected.Text = "تثبيت المحدد"; $btnInstallSelected.Location = New-Object System.Drawing.Point(665, 630); $btnInstallSelected.Size = New-Object System.Drawing.Size(615, 45); $btnInstallSelected.Font = New-Object System.Drawing.Font("Segoe UI", 14, [System.Drawing.FontStyle]::Bold); $btnInstallSelected.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#0E639C"); $btnInstallSelected.ForeColor = [System.Drawing.Color]::White; $btnInstallSelected.FlatStyle = "Flat"; $btnInstallSelected.FlatAppearance.BorderSize = 0; $btnInstallSelected.Cursor = [System.Windows.Forms.Cursors]::Hand; $mainForm.Controls.Add($btnInstallSelected)
 $btnLangToggle.Add_Click({
-        $flowLayoutPanel.Visible = $false; $txtLog.Visible = $false
         $script:isEnglish = -not $script:isEnglish
+        if ($script:isEnglish) {
+            # // التبديل للانجليزية: ترتيب من اليسار لليمين
+            $pnlActionButtons.FlowDirection = "LeftToRight"
+            # // الموقع ثابت في النقطة 30 لضمان التوسيط
+            $pnlActionButtons.Location = New-Object System.Drawing.Point(30, 125) 
+        }
+        else {
+            # // التبديل للعربية: ترتيب من اليمين لليسار
+            $pnlActionButtons.FlowDirection = "RightToLeft"
+            # // الموقع ثابت تماماً في النقطة 30 عند العودة للعربية
+            $pnlActionButtons.Location = New-Object System.Drawing.Point(30, 125)
+        }
         $btnLangToggle.Text = if ($script:isEnglish) { "AR" } else { "EN" }
         $mainForm.RightToLeft = if ($script:isEnglish) { "No" } else { "Yes" }
         $flowLayoutPanel.RightToLeft = if ($script:isEnglish) { "No" } else { "Yes" }
@@ -799,13 +781,16 @@ $btnLangToggle.Add_Click({
         $btnImport.Text = if ($script:isEnglish) { "Import $([char]0x21F2)" } else { "$([char]0x21F2) استيراد" }
         $btnInstallVS.Text = if ($script:isEnglish) { "Install VS Code" } else { "تثبيت VS Code" }
         $btnInstallNode.Text = if ($script:isEnglish) { "Install Node.js" } else { "تثبيت Node.js" }
+        $btnInstallGit.Text = if ($script:isEnglish) { "Install Git" } else { "تثبيت Git" }
+        $btnUpdateExts.Text = if ($script:isEnglish) { "Update All Exts" } else { "تحديث كل الإضافات" }
+        $btnWorkEnv.Text = if ($script:isEnglish) { "Dev Env Installer" } else { "أداة تثبيت بيئة العمل" }
         Update-DevViewUI
+        $btnWorkEnv.Text = if ($script:isEnglish) { "Dev Env Installer" } else { "أداة تثبيت بيئة العمل" }
         $lblListSubtitle.Text = if ($script:isEnglish) { "Click on the extensions to install:" } else { "انقر على الإضافات التي ترغب بتثبيتها:" }
         $btnInstallAll.Text = if ($script:isEnglish) { "Install All" } else { "تثبيت الكل" }
         $btnInstallSelected.Text = if ($script:isEnglish) { "Install Selected" } else { "تثبيت المحدد" }
         $nodeTip = if ($script:isEnglish) { "Check & Install Node.js" } else { "فحص وتحميل Node.js" }
         $toolTip.SetToolTip($btnInstallNode, $nodeTip)
-        # تحديث النصوص التوضيحية (ToolTips) لجميع أزرار التحكم عند تغيير اللغة
         $toolTip.SetToolTip($btnExport, (if ($script:isEnglish) { "Backup installed extensions" } else { "نسخ احتياطي للإضافات المثبتة" }))
         $toolTip.SetToolTip($btnImport, (if ($script:isEnglish) { "Import extensions from file" } else { "استيراد إضافات من ملف نصي" }))
         $toolTip.SetToolTip($btnInstallVS, (if ($script:isEnglish) { "Download & Install VS Code" } else { "تحميل وتثبيت برنامج Visual Studio Code" }))
@@ -840,7 +825,7 @@ $btnLangToggle.Add_Click({
     })
 $btnExport = New-Object System.Windows.Forms.Label
 $btnExport.Text = "تصدير $([char]0x21F1)"
-$btnExport.SetBounds(400, 125, 120, 35)
+$btnExport.Size = New-Object System.Drawing.Size(120, 35)
 $btnExport.ForeColor = "White"; $btnExport.Cursor = "Hand"; $btnExport.TextAlign = "MiddleCenter"
 $btnExport.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30")
 $btnExport.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 10, [System.Drawing.FontStyle]::Bold)
@@ -859,10 +844,9 @@ $btnExport.Add_Click({
             }
         }
     })
-$mainForm.Controls.Add($btnExport)
 $btnImport = New-Object System.Windows.Forms.Label
 $btnImport.Text = "$([char]0x21F2) استيراد"
-$btnImport.SetBounds(530, 125, 120, 35)
+$btnImport.Size = New-Object System.Drawing.Size(120, 35)
 $btnImport.ForeColor = "White"; $btnImport.Cursor = "Hand"; $btnImport.TextAlign = "MiddleCenter"
 $btnImport.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30")
 $btnImport.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 10, [System.Drawing.FontStyle]::Bold)
@@ -879,10 +863,9 @@ $btnImport.Add_Click({
             }
         }
     })
-$mainForm.Controls.Add($btnImport)
 $btnInstallVS = New-Object System.Windows.Forms.Label
 $btnInstallVS.Text = "$([char]0x1F4BB) تثبيت VS Code"
-$btnInstallVS.SetBounds(660, 125, 160, 35)
+$btnInstallVS.Size = New-Object System.Drawing.Size(160, 35)
 $btnInstallVS.ForeColor = "White"; $btnInstallVS.Cursor = "Hand"; $btnInstallVS.TextAlign = "MiddleCenter"
 $btnInstallVS.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30")
 $btnInstallVS.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 10, [System.Drawing.FontStyle]::Bold)
@@ -926,11 +909,10 @@ $btnInstallVS.Add_Click({
         $btnInstallVS.Enabled = $true
         $lblStats.Text = if ($script:isEnglish) { "✅ Ready." } else { "✅ النظام جاهز." }
     })
-$mainForm.Controls.Add($btnInstallVS)
 $btnInstallVS.BringToFront()
 $btnInstallNode = New-Object System.Windows.Forms.Label
 $btnInstallNode.Text = "تثبيت Node.js"
-$btnInstallNode.SetBounds(830, 125, 160, 35)
+$btnInstallNode.Size = New-Object System.Drawing.Size(160, 35)
 $btnInstallNode.ForeColor = "White"; $btnInstallNode.Cursor = "Hand"; $btnInstallNode.TextAlign = "MiddleCenter"
 $btnInstallNode.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30")
 $btnInstallNode.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 10, [System.Drawing.FontStyle]::Bold)
@@ -945,9 +927,149 @@ $btnInstallNode.Add_Click({
             Show-SchoMessage -Message $msg -Type "Success"
         }
     })
-$mainForm.Controls.Add($btnInstallNode)
 $btnInstallNode.BringToFront()
-# إضافة نصوص توضيحية تظهر عند الوقوف بالفأرة على الأزرار
+$btnInstallGit = New-Object System.Windows.Forms.Label
+$btnInstallGit.Text = if ($script:isEnglish) { "Install Git" } else { "تثبيت Git" }
+$btnInstallGit.Size = New-Object System.Drawing.Size(120, 35)
+$btnInstallGit.ForeColor = "White"; $btnInstallGit.Cursor = "Hand"; $btnInstallGit.TextAlign = "MiddleCenter"
+$btnInstallGit.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30")
+$btnInstallGit.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 10, [System.Drawing.FontStyle]::Bold)
+$btnInstallGit.Add_MouseEnter({ $this.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#3F3F41") })
+$btnInstallGit.Add_MouseLeave({ $this.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30") })
+$btnInstallGit.BringToFront()
+$btnInstallGit.Add_Click({
+        $btnInstallGit.Enabled = $false
+        $lblStats.Text = if ($script:isEnglish) { "Checking Git version..." } else { "جاري فحص إصدار Git..." }
+        [System.Windows.Forms.Application]::DoEvents()
+        try {
+            $gitApi = Invoke-RestMethod -Uri "https://api.github.com/repos/git-for-windows/git/releases/latest"
+            $latestGitVer = $gitApi.tag_name.Replace("v", "")
+            $gitDownloadUrl = ($gitApi.assets | Where-Object { $_.name -match "64-bit.exe" })[0].browser_download_url
+        }
+        catch { $latestGitVer = "Unknown" }
+        $gitCheck = Get-Command "git" -ErrorAction SilentlyContinue
+        $installedGitVer = $null
+        if ($gitCheck) {
+            $gitRaw = (& "git" --version)
+            if ($gitRaw -match "(\d+\.\d+\.\d+)") { $installedGitVer = $matches[1] }
+        }
+        $shouldInstallGit = $false
+        if (-not $installedGitVer) {
+            $msg = if ($script:isEnglish) { "Git is not installed. Install version $latestGitVer?" } else { "برنامج Git غير مثبت. هل تريد تثبيت الإصدار $latestGitVer؟" }
+            if ((Show-ConfirmDialog $msg) -eq "OK") { $shouldInstallGit = $true }
+        }
+        elseif ($installedGitVer -ne $latestGitVer) {
+            $msg = if ($script:isEnglish) { "New Git update found! Upgrade to $latestGitVer?" } else { "يوجد تحديث لبرنامج Git! هل تريد الترقية للإصدار $latestGitVer؟" }
+            if ((Show-ConfirmDialog $msg) -eq "OK") { $shouldInstallGit = $true }
+        }
+        else {
+            $msg = if ($script:isEnglish) { "Git is already up to date!" } else { "لديك أحدث إصدار من Git بالفعل!" }
+            Show-SchoMessage -Message $msg -Type "Success"
+        }
+        if ($shouldInstallGit) {
+            $gitInstallerPath = Join-Path $env:TEMP "GitSetup.exe"
+            Write-Log "📥 جاري تحميل Git إصدار ($latestGitVer)..." "📥 Downloading Git ($latestGitVer)..."
+            if (Download-FileWithProgress -url $gitDownloadUrl -destination $gitInstallerPath) {
+                Write-Log "⚙️ جاري تثبيت Git صامتاً..." "⚙️ Installing Git silently..."
+                $gitProcess = Start-Process -FilePath $gitInstallerPath -ArgumentList "/VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS" -Wait -PassThru
+                if ($gitProcess.ExitCode -eq 0) {
+                    Write-Log "🎉 تم تثبيت Git بنجاح!" "🎉 Git installed successfully!"
+                    Show-SchoMessage -Message (if ($script:isEnglish) { "Git installed!" } else { "تم تثبيت Git بنجاح!" })
+                }
+                if (Test-Path $gitInstallerPath) { Remove-Item $gitInstallerPath -Force }
+            }
+        }
+        $btnInstallGit.Enabled = $true
+        $lblStats.Text = if ($script:isEnglish) { "✅ Ready." } else { "✅ النظام جاهز." }
+    })
+$btnUpdateExts = New-Object System.Windows.Forms.Label
+$btnUpdateExts.Text = if ($script:isEnglish) { "Update All Exts" } else { "تحديث كل الإضافات" }
+$btnUpdateExts.Size = New-Object System.Drawing.Size(150, 35)
+$btnUpdateExts.ForeColor = "White"; $btnUpdateExts.Cursor = "Hand"; $btnUpdateExts.TextAlign = "MiddleCenter"
+$btnUpdateExts.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30")
+$btnUpdateExts.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 10, [System.Drawing.FontStyle]::Bold)
+$btnUpdateExts.Add_MouseEnter({ $this.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#3F3F41") })
+$btnUpdateExts.Add_MouseLeave({ $this.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30") })
+$btnUpdateExts.BringToFront()
+
+
+
+$btnWorkEnv = New-Object System.Windows.Forms.Label
+$btnWorkEnv.Text = if ($script:isEnglish) { "Dev Env Installer" } else { "أداة تثبيت بيئة العمل" }
+$btnWorkEnv.Size = New-Object System.Drawing.Size(180, 35) # عرض الزر أكبر قليلاً ليناسب النص
+$btnWorkEnv.ForeColor = "White"; $btnWorkEnv.Cursor = "Hand"; $btnWorkEnv.TextAlign = "MiddleCenter"
+$btnWorkEnv.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30")
+$btnWorkEnv.Font = New-Object System.Drawing.Font("Segoe UI Symbol", 10, [System.Drawing.FontStyle]::Bold)
+
+# إضافة تأثيرات الألوان عند مرور الماوس
+$btnWorkEnv.Add_MouseEnter({ $this.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#3F3F41") })
+$btnWorkEnv.Add_MouseLeave({ $this.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#2D2D30") })
+
+# برمجة ما سيحدث عند الضغط على الزر (تحميل وتشغيل الملف)
+$btnWorkEnv.Add_Click({
+        Start-Process "https://github.com/SULAIMAN-SHO/WebBuilder-push/releases/download/v1.0.0.0/WebBuilder.exe"
+    })
+
+
+$btnUpdateExts.Add_Click({
+        $codeCommand = Get-Command "code" -ErrorAction SilentlyContinue
+        if (-not $codeCommand) {
+            Show-SchoMessage -Message (if ($script:isEnglish) { "VS Code not found!" } else { "لم يتم العثور على VS Code!" }) -Type "Error"
+            return
+        }
+        $btnUpdateExts.Enabled = $false
+        Write-Log "🔍 جاري البحث عن تحديثات حقيقية... انتظر قليلاً" "🔍 Checking for actual updates... please wait"
+        [System.Windows.Forms.Application]::DoEvents()
+        $outdatedRaw = & $codeCommand.Source --outdated
+        $toUpdate = @()
+        if ($outdatedRaw.Count -gt 2) {
+            for ($i = 2; $i -lt $outdatedRaw.Count; $i++) {
+                if ($outdatedRaw[$i] -match '^([^\s]+)') {
+                    $toUpdate += $matches[1]
+                }
+            }
+        }
+        if ($toUpdate.Count -gt 0) {
+            $msg = if ($script:isEnglish) { "Found $($toUpdate.Count) updates. Start now?" } else { "تم العثور على $($toUpdate.Count) تحديث حقيقي. هل نبدأ الآن؟" }
+            if ((Show-ConfirmDialog $msg) -eq "OK") {
+                Install-Extensions -itemsToInstall $toUpdate
+            }
+        }
+        else {
+            Write-Log "✅ مبروك! كل إضافاتك محدثة لآخر إصدار." "✅ Congrats! All your extensions are up to date."
+            Show-SchoMessage -Message (if ($script:isEnglish) { "Everything is up to date!" } else { "كل شيء محدث بالفعل!" }) -Type "Success"
+        }
+        $btnUpdateExts.Enabled = $true
+        $lblStats.Text = if ($script:isEnglish) { "✅ Ready." } else { "✅ النظام جاهز." }
+    })
+
+
+#! 8. تصدير
+$pnlActionButtons.Controls.Add($btnExport)
+
+#! 7. استيراد
+$pnlActionButtons.Controls.Add($btnImport)
+
+#! 6. أداة تثبيت بيئة العمل
+$pnlActionButtons.Controls.Add($btnWorkEnv)
+
+#! 5. وضع المطور / المستخدم
+$pnlActionButtons.Controls.Add($btnDevView)
+
+#! 4. تحديث الإضافات
+$pnlActionButtons.Controls.Add($btnUpdateExts)
+
+#! 3. تثبيت Git
+$pnlActionButtons.Controls.Add($btnInstallGit)
+
+#! 2. تثبيت Node.js
+$pnlActionButtons.Controls.Add($btnInstallNode)
+
+#! 1. تثبيت VS Code
+$pnlActionButtons.Controls.Add($btnInstallVS)
+
+
+
 $toolTip.SetToolTip($btnExport, "نسخ احتياطي للإضافات المثبتة")
 $toolTip.SetToolTip($btnImport, "استيراد إضافات من ملف نصي")
 $toolTip.SetToolTip($btnInstallVS, "تحميل وتثبيت برنامج Visual Studio Code")
